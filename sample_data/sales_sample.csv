@@ -1,0 +1,21 @@
+date,product,category,region,sales,units,profit
+2024-01-05,Widget A,Electronics,North,12500,250,3200
+2024-01-12,Gadget B,Electronics,South,8900,178,2100
+2024-01-18,Tool C,Hardware,East,5400,108,980
+2024-02-03,Widget A,Electronics,West,14200,284,3800
+2024-02-14,Gadget B,Electronics,North,7600,152,1750
+2024-02-22,Supply D,Office,South,3200,640,450
+2024-03-01,Tool C,Hardware,East,6100,122,1100
+2024-03-10,Widget A,Electronics,West,15800,316,4100
+2024-03-18,Gadget B,Electronics,South,9200,184,2250
+2024-03-25,Supply D,Office,North,2800,560,380
+2024-04-02,Tool C,Hardware,West,4800,96,820
+2024-04-15,Widget A,Electronics,East,13100,262,3400
+2024-04-22,Gadget B,Electronics,South,10500,210,2600
+2024-05-01,Supply D,Office,East,3500,700,520
+2024-05-12,Tool C,Hardware,North,5900,118,1050
+2024-05-20,Widget A,Electronics,South,14900,298,3950
+2024-06-03,Gadget B,Electronics,West,8800,176,2050
+2024-06-14,Supply D,Office,South,3100,620,410
+2024-06-28,Tool C,Hardware,East,5500,110,990
+2024-07-05,Widget A,Electronics,North,16200,324,4300
