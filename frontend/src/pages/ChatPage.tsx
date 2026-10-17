@@ -15,6 +15,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   isError?: boolean;
+  verifiedFacts?: string[];
 }
 
 export default function ChatPage() {
@@ -39,7 +40,12 @@ export default function ChatPage() {
 
     try {
       const result = await insights.mutateAsync({ question });
-      setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", content: result.insights }]);
+      setMessages((m) => [...m, {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: result.insights,
+        verifiedFacts: result.verified_facts,
+      }]);
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "Something went wrong generating insights.";
       setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", content: message, isError: true }]);
@@ -81,7 +87,19 @@ export default function ChatPage() {
                       : "bg-muted"
                   )}
                 >
-                  {m.role === "assistant" ? <MarkdownMessage content={m.content} /> : m.content}
+                  {m.role === "assistant" ? (
+                    <>
+                      {m.verifiedFacts && m.verifiedFacts.length > 0 && (
+                        <div className="mb-3 rounded-md border border-border bg-background/60 p-3">
+                          <p className="mb-1 text-xs font-semibold">Verified dataset facts</p>
+                          <ul className="list-inside list-disc space-y-1 text-xs">
+                            {m.verifiedFacts.map((fact) => <li key={fact}>{fact}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      <MarkdownMessage content={m.content} />
+                    </>
+                  ) : m.content}
                 </div>
               </div>
             ))}

@@ -1,8 +1,19 @@
 from app.services.ai.factory import get_ai_provider
 from app.services.data_loader import load_dataframe
-from app.services.data_summary import build_dataset_summary
 
-SYSTEM_PROMPT = "You are an expert AI Data Analyst."
+from app.services.factual_analytics import (
+    calculate_dataset_facts,
+    factual_context,
+    verified_facts_for_answer,
+)
+
+SYSTEM_PROMPT = (
+    "You are a careful data analyst. Explain the supplied deterministic facts. "
+    "Never invent or estimate dataset statistics, columns, records, categories, "
+    "trends, or correlations. If the supplied facts do not answer the question, "
+    "say so clearly. Separate computed facts from interpretations and recommendations. "
+    "For general questions unrelated to the dataset, make clear that the answer is general."
+)
 
 DEFAULT_ANALYSIS_PROMPT = """
 Act as a Senior Business Data Analyst.
@@ -35,94 +46,58 @@ Use headings and bullet points.
 """
 
 
-def _build_context(dataset_id: str) -> str:
-
-    summary = build_dataset_summary(dataset_id)
+def _build_context(dataset_id: str, question: str | None = None) -> tuple[dict, list[str]]:
     df = load_dataframe(dataset_id)
-
-    lines = [
-        f"Dataset Name: {summary.filename}",
-        f"Rows: {summary.rows}",
-        f"Columns: {summary.columns}",
-        f"Duplicate Rows: {summary.duplicate_rows}",
-        f"Total Missing Values: {summary.missing_values_total}",
-        "",
-        "Columns:"
-    ]
-
-    for col in summary.column_summaries:
-
-        lines.append(
-            f"- {col.name}"
-        )
-
-        lines.append(
-            f"  Type: {col.dtype}"
-        )
-
-        lines.append(
-            f"  Missing: {col.missing_count} ({col.missing_pct}%)"
-        )
-
-        lines.append(
-            f"  Unique: {col.unique_count}"
-        )
-
-        if col.mean is not None:
-            lines.append(
-                f"  Min={col.min}, Max={col.max}, Mean={col.mean:.2f}, Std={col.std:.2f}"
-            )
-
-        if col.top_value is not None:
-            lines.append(
-                f"  Most common value: {col.top_value}"
-            )
-
-        try:
-            sample_values = df[col.name].dropna().unique()[:5].tolist()
-            if sample_values:
-                lines.append(
-                    f"  Samples: {sample_values}"
-                )
-        except Exception:
-            pass
-
-    lines.append("")
-    lines.append("Dataset Statistics")
-    lines.append(df.describe(include="all").to_string())
-
-    return "\n".join(lines)
+    facts = calculate_dataset_facts(df, question)
+    return facts, verified_facts_for_answer(facts)
 
 
-def generate_insights(dataset_id: str, question: str | None = None) -> str:
-    """
-    Build a text summary of the dataset and hand it, along with the
-    question (or the default analysis prompt), to whichever AI provider
-    is configured via AI_PROVIDER (Groq by default).
-
-    Raises ValueError if the configured provider isn't available (e.g. no
-    API key set) — routers/insights.py turns that into a 503. Any other
-    exception (network/provider error) propagates and becomes a 500.
-    """
-
-    # Resolve the provider first so a missing/invalid configuration fails
-    # fast, before doing any dataframe work.
-    provider = get_ai_provider()
-
-    context = _build_context(dataset_id)
+def _generate_with_verified_facts(
+    dataset_id: str,
+    question: str | None,
+) -> tuple[str, list[str]]:
+    facts, _ = _build_context(dataset_id, question)
+    verified_facts = verified_facts_for_answer(facts)
     prompt = question or DEFAULT_ANALYSIS_PROMPT
 
     final_prompt = f"""
-Dataset Information
+The following JSON contains deterministic facts calculated from the uploaded dataset with Pandas.
+Treat it as the only source for exact dataset statistics. Do not derive or guess additional values.
 
-{context}
+Computed facts:
+{factual_context(facts)}
 
 User Request
 
 {prompt}
 """
 
-    return provider.generate(
-        system_prompt=SYSTEM_PROMPT,
-        user_prompt=final_prompt,
-    )
+    try:
+        provider = get_ai_provider()
+    except ValueError:
+        raise
+    except Exception as error:
+        raise RuntimeError("The configured AI provider could not complete the request.") from error
+    try:
+        response = provider.generate(
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=final_prompt,
+        )
+    except Exception as error:
+        raise RuntimeError("The configured AI provider could not complete the request.") from error
+    if not isinstance(response, str) or not response.strip():
+        raise RuntimeError("The configured AI provider returned an empty response.")
+    return response.strip(), verified_facts
+
+
+def generate_insights(dataset_id: str, question: str | None = None) -> str:
+    """Return an LLM explanation grounded in Pandas-computed dataset facts."""
+    response, _ = _generate_with_verified_facts(dataset_id, question)
+    return response
+
+
+def generate_grounded_insights(
+    dataset_id: str,
+    question: str | None = None,
+) -> tuple[str, list[str]]:
+    return _generate_with_verified_facts(dataset_id, question)

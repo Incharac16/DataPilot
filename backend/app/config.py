@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
 
     upload_dir: str = "uploads"
+    data_dir: str = "data"
     max_upload_mb: int = 50
 
     cors_origins: str = (

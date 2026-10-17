@@ -12,10 +12,13 @@ node_modules/
 dist/
 build/
 *.local
+*.tsbuildinfo
 
 # Uploads & data
 backend/uploads/*
 !backend/uploads/.gitkeep
+backend/data/*
+!backend/data/.gitkeep
 
 # IDE
 .vscode/

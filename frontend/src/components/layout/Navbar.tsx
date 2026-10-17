@@ -7,8 +7,8 @@ import { paths } from "@/routes/paths";
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-xl sm:px-6">
-      <Breadcrumb />
+    <header className="sticky top-0 z-40 flex h-16 min-w-0 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-xl sm:px-6">
+      <div className="min-w-0 flex-1 overflow-hidden"><Breadcrumb /></div>
       <div className="flex items-center gap-2">
         <Button asChild size="sm">
           <Link to={paths.upload}>

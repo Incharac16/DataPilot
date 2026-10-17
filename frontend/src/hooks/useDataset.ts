@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDatasetCharts, getDatasetInsights, getDatasetSummary, uploadDataset } from "@/services/api";
-import type { InsightsRequest } from "@/types/api";
+import type { DatasetSummaryParams, InsightsRequest } from "@/types/api";
 import { useState } from "react";
 
-export function useDatasetSummary(id: string | undefined) {
+export function useDatasetSummary(
+  id: string | undefined,
+  params: DatasetSummaryParams = {},
+) {
   return useQuery({
-    queryKey: ["dataset-summary", id],
-    queryFn: () => getDatasetSummary(id as string),
+    queryKey: ["dataset-summary", id, params],
+    queryFn: () => getDatasetSummary(id as string, params),
     enabled: Boolean(id),
   });
 }

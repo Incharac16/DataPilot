@@ -8,7 +8,7 @@ from app.models.schemas import (
 )
 
 from app.services.data_loader import DatasetStore
-from app.services.insights_service import generate_insights
+from app.services.insights_service import generate_grounded_insights
 
 router = APIRouter(
     prefix="/api/datasets",
@@ -25,17 +25,21 @@ async def get_insights(
     body: InsightsRequest | None = None,
 ):
 
-    if not DatasetStore.exists(dataset_id):
+    try:
+        DatasetStore.get(dataset_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found") from e
+    except FileNotFoundError as e:
         raise HTTPException(
             status_code=404,
-            detail=f"Dataset '{dataset_id}' not found",
-        )
+            detail=f"Stored file for dataset '{dataset_id}' is missing.",
+        ) from e
 
     question = body.question if body else None
 
     try:
 
-        insights_text = generate_insights(
+        insights_text, verified_facts = generate_grounded_insights(
             dataset_id,
             question,
         )
@@ -44,6 +48,7 @@ async def get_insights(
             id=dataset_id,
             insights=insights_text,
             generated_at=datetime.now(timezone.utc).isoformat(),
+            verified_facts=verified_facts,
         )
 
     except ValueError as e:
@@ -53,9 +58,10 @@ async def get_insights(
             detail=str(e),
         )
 
-    except Exception as e:
-
+    except RuntimeError as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"AI Insight generation failed: {str(e)}",
-        )
+            status_code=503,
+            detail=str(e),
+        ) from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="AI insight generation failed.") from e

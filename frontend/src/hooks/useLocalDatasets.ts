@@ -1,6 +1,5 @@
-// The backend has no dataset-listing endpoint yet, so recently uploaded/viewed
-// datasets are tracked client-side (localStorage) to power the Dashboard and
-// History pages. Once GET /api/datasets exists server-side, swap this out.
+// The Dashboard's recent-upload list is client-side. The History page uses
+// the backend's persistent GET /api/datasets endpoint.
 import { useCallback, useEffect, useState } from "react";
 import type { UploadResponse } from "@/types/api";
 
