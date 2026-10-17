@@ -16,8 +16,6 @@ class GroqProvider(AIProvider):
             raise ValueError(
                 "GROQ_API_KEY not found. Add it to backend/.env to enable AI Insights."
             )
-        print("Loaded Groq key:", settings.groq_api_key)
-        print("Key length:", len(settings.groq_api_key) if settings.groq_api_key else 0)
 
         self._client = Groq(api_key=settings.groq_api_key)
         self._model = settings.groq_model

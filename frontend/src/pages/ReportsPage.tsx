@@ -16,6 +16,7 @@ export default function ReportsPage() {
   const insights = useDatasetInsights(datasetId);
   const { toast } = useToast();
   const [report, setReport] = useState<string | null>(null);
+  const [verifiedFacts, setVerifiedFacts] = useState<string[]>([]);
 
   const handleGenerate = async () => {
     try {
@@ -23,6 +24,7 @@ export default function ReportsPage() {
         question: "Generate a full written report summarizing key trends, outliers, and data quality issues in this dataset.",
       });
       setReport(result.insights);
+      setVerifiedFacts(result.verified_facts);
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "Couldn't generate a report right now.";
       toast({ variant: "destructive", title: "Report generation failed", description: message });
@@ -30,8 +32,6 @@ export default function ReportsPage() {
   };
 
   const handleExport = () => {
-    // TODO: no PDF/export endpoint exists on the backend yet — exporting the
-    // AI-generated markdown as a .md file client-side in the meantime.
     if (!report) return;
     const blob = new Blob([report], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
@@ -68,11 +68,19 @@ export default function ReportsPage() {
           )}
           {insights.isPending && <p className="text-sm text-muted-foreground">Generating report…</p>}
           {report && !insights.isPending && <MarkdownMessage content={report} />}
+          {report && !insights.isPending && verifiedFacts.length > 0 && (
+            <div className="mt-6 rounded-lg border border-border bg-muted/30 p-4">
+              <h2 className="mb-2 text-sm font-semibold">Verified dataset facts</h2>
+              <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+                {verifiedFacts.map((fact) => <li key={fact}>{fact}</li>)}
+              </ul>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        PDF export isn't available yet — the backend doesn't expose a report/export endpoint. This downloads the report as Markdown instead.
+        Download this AI-written narrative as Markdown. A deterministic dataset PDF report is available from the dataset Analytics page.
       </p>
     </div>
   );

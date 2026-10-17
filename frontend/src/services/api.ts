@@ -5,7 +5,10 @@
 
 import type {
   DatasetCharts,
+  DatasetRecord,
   DatasetSummary,
+  DatasetSummaryParams,
+  ChartType,
   InsightsRequest,
   InsightsResponse,
   UploadResponse,
@@ -46,10 +49,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// ---------------------------------------------------------------------------
-// Confirmed endpoints (from backend README / routers)
-// ---------------------------------------------------------------------------
-
 /** POST /api/upload — Upload a CSV or XLSX file. */
 export function uploadDataset(file: File, onProgress?: (pct: number) => void): Promise<UploadResponse> {
   const formData = new FormData();
@@ -89,14 +88,34 @@ export function uploadDataset(file: File, onProgress?: (pct: number) => void): P
   });
 }
 
-/** GET /api/datasets/{id}/summary — Dataset summary & stats. */
-export function getDatasetSummary(id: string): Promise<DatasetSummary> {
-  return request<DatasetSummary>(`/api/datasets/${id}/summary`);
+/** GET /api/datasets/{id}/summary — Full-dataset analytics with paginated, searchable preview rows. */
+export function getDatasetSummary(
+  id: string,
+  params: DatasetSummaryParams = {},
+): Promise<DatasetSummary> {
+  const query = new URLSearchParams();
+  if (params.page !== undefined) query.set("page", String(params.page));
+  if (params.page_size !== undefined) query.set("page_size", String(params.page_size));
+  if (params.search !== undefined) query.set("search", params.search);
+  if (params.sort_by !== undefined) query.set("sort_by", params.sort_by);
+  if (params.sort_desc !== undefined) query.set("sort_desc", String(params.sort_desc));
+  const suffix = query.size > 0 ? `?${query.toString()}` : "";
+  return request<DatasetSummary>(`/api/datasets/${id}/summary${suffix}`);
 }
 
 /** GET /api/datasets/{id}/charts — Auto-generated Plotly charts. */
-export function getDatasetCharts(id: string): Promise<DatasetCharts> {
-  return request<DatasetCharts>(`/api/datasets/${id}/charts`);
+export function getDatasetCharts(
+  id: string,
+  options?: { chart_type: ChartType; x_column?: string; y_column?: string },
+): Promise<DatasetCharts> {
+  const query = new URLSearchParams();
+  if (options) {
+    query.set("chart_type", options.chart_type);
+    if (options.x_column) query.set("x_column", options.x_column);
+    if (options.y_column) query.set("y_column", options.y_column);
+  }
+  const suffix = query.size > 0 ? `?${query.toString()}` : "";
+  return request<DatasetCharts>(`/api/datasets/${id}/charts${suffix}`);
 }
 
 /** POST /api/datasets/{id}/insights — AI-generated insights for a dataset. */
@@ -107,25 +126,53 @@ export function getDatasetInsights(id: string, body: InsightsRequest = {}): Prom
   });
 }
 
-// ---------------------------------------------------------------------------
-// TODO — not present in the current backend.
-// These are typed placeholders so the UI compiles and runs end-to-end today.
-// Wire them up once the corresponding FastAPI routes exist; do not treat the
-// paths below as real until confirmed against backend/app/routers.
-// ---------------------------------------------------------------------------
-
-/** TODO: no dataset-listing endpoint exists yet (needed for Dashboard/History). */
-export function listDatasets(): Promise<never> {
-  throw new ApiError(501, "GET /api/datasets is not implemented on the backend yet.");
+/** GET /api/datasets — Persisted upload history. */
+export function listDatasets(): Promise<DatasetRecord[]> {
+  return request<DatasetRecord[]>("/api/datasets");
 }
 
-/** TODO: no chat/conversation endpoint exists yet — only one-shot /insights. */
-export function sendChatMessage(_datasetId: string, _message: string): Promise<never> {
+/** DELETE /api/datasets/{id} — Remove dataset metadata and its stored upload. */
+export function deleteDataset(id: string): Promise<void> {
+  return request<void>(`/api/datasets/${id}`, { method: "DELETE" });
+}
+
+/** GET /api/datasets/{id}/report.pdf — Download a generated PDF report. */
+export async function downloadDatasetReport(id: string): Promise<Blob> {
+  const response = await fetch(`${BASE_URL}/api/datasets/${encodeURIComponent(id)}/report.pdf`, {
+    headers: { Accept: "application/pdf" },
+  });
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const body = await response.json();
+      detail = body.detail ?? detail;
+    } catch {
+      // response wasn't JSON — retain status text
+    }
+    throw new ApiError(response.status, detail);
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("application/pdf")) {
+    throw new ApiError(response.status, "The server response was not a PDF file.");
+  }
+
+  const blob = await response.blob();
+  const signature = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
+  if (signature.length !== 5 || String.fromCharCode(...signature) !== "%PDF-") {
+    throw new ApiError(response.status, "The server returned an invalid PDF file.");
+  }
+  return blob;
+}
+
+/** Chat UI uses one-shot /insights requests; conversation history is not persisted. */
+export function sendChatMessage(...args: [datasetId: string, message: string]): Promise<never> {
+  void args;
   throw new ApiError(501, "Chat endpoint is not implemented on the backend yet.");
 }
 
-/** TODO: no report generation/export endpoint exists yet. */
-export function generateReport(_datasetId: string): Promise<never> {
+/** Legacy placeholder; the Reports page uses /insights and Analytics exports PDF. */
+export function generateReport(...args: [datasetId: string]): Promise<never> {
+  void args;
   throw new ApiError(501, "Report generation endpoint is not implemented on the backend yet.");
 }
 

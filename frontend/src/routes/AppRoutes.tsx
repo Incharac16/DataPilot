@@ -8,7 +8,6 @@ const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const UploadPage = lazy(() => import("@/pages/UploadPage"));
 const DatasetPreviewPage = lazy(() => import("@/pages/DatasetPreviewPage"));
 const AnalyticsPage = lazy(() => import("@/pages/AnalyticsPage"));
-const ChartsPage = lazy(() => import("@/pages/ChartsPage"));
 const ChatPage = lazy(() => import("@/pages/ChatPage"));
 const ReportsPage = lazy(() => import("@/pages/ReportsPage"));
 const HistoryPage = lazy(() => import("@/pages/HistoryPage"));
@@ -34,7 +33,6 @@ export function AppRoutes() {
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/datasets/:datasetId" element={<DatasetPreviewPage />} />
           <Route path="/datasets/:datasetId/analytics" element={<AnalyticsPage />} />
-          <Route path="/datasets/:datasetId/charts" element={<ChartsPage />} />
           <Route path="/datasets/:datasetId/chat" element={<ChatPage />} />
           <Route path="/datasets/:datasetId/reports" element={<ReportsPage />} />
           <Route path="/history" element={<HistoryPage />} />
