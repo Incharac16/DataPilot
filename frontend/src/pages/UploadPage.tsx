@@ -25,13 +25,9 @@ export default function UploadPage() {
     try {
       const result = await upload.mutateAsync(file);
 
-      console.log("UPLOAD RESULT:", result);
-
       addDataset(result);
 
-      const datasetId =
-        (result as any).id ??
-        (result as any).dataset_id;
+      const datasetId = result.id;
 
       if (!datasetId) {
         throw new Error("Backend did not return a dataset ID.");
