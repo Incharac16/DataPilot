@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Dropzone } from "@/components/upload/Dropzone";
 import { UploadProgress } from "@/components/upload/UploadProgress";
 import { Card, CardContent } from "@/components/ui/card";
-import { useUploadDataset } from "@/hooks/useDataset";
+import { useUploadConfig, useUploadDataset } from "@/hooks/useDataset";
 import { useLocalDatasets } from "@/hooks/useLocalDatasets";
 import { useToast } from "@/hooks/use-toast";
 import { paths } from "@/routes/paths";
@@ -16,6 +16,7 @@ export default function UploadPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addDataset } = useLocalDatasets();
+  const uploadConfig = useUploadConfig();
   const upload = useUploadDataset();
 
   const handleFile = async (file: File) => {
@@ -78,10 +79,19 @@ export default function UploadPage() {
       <Card>
         <CardContent className="p-6">
           {!pendingFile || upload.isError ? (
-            <Dropzone
-              onFileSelected={handleFile}
-              disabled={upload.isPending}
-            />
+            uploadConfig.isPending ? (
+              <p className="text-sm text-muted-foreground">Loading upload settings…</p>
+            ) : uploadConfig.isError ? (
+              <p className="text-sm text-destructive">
+                Could not load upload settings. Please refresh the page and try again.
+              </p>
+            ) : (
+              <Dropzone
+                onFileSelected={handleFile}
+                maxUploadMb={uploadConfig.data.max_upload_mb}
+                disabled={upload.isPending}
+              />
+            )
           ) : (
             <UploadProgress
               fileName={pendingFile.name}

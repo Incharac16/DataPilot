@@ -100,7 +100,7 @@ Copy `backend/.env.example` to `backend/.env`. Do not commit `.env` or put real 
 | `GROQ_MODEL` | `openai/gpt-oss-20b` | Groq model name; this project default is retained |
 | `UPLOAD_DIR` | `uploads` | Directory for UUID-named uploaded source files |
 | `DATA_DIR` | `data` | Directory containing `datasets.sqlite3` |
-| `MAX_UPLOAD_MB` | `50` | Maximum accepted upload size |
+| `MAX_UPLOAD_MB` | `100` | Maximum accepted upload size; lower configured values are enforced |
 | `CORS_ORIGINS` | localhost Vite origins | Comma-separated allowed browser origins |
 | `VITE_BACKEND_URL` | empty | Optional frontend API base URL; Vite's development proxy defaults to port 8000 |
 

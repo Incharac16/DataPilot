@@ -27,6 +27,10 @@ export interface UploadResponse {
   status?: "processing" | "ready" | "error" | "missing";
 }
 
+export interface UploadConfig {
+  max_upload_mb: number;
+}
+
 export interface ColumnSummary {
   name: string;
   dtype: string;

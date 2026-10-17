@@ -3,17 +3,18 @@ import { FileSpreadsheet, UploadCloud } from "lucide-react";
 import { cn, formatBytes } from "@/lib/utils";
 
 const ACCEPTED_TYPES = [".csv", ".xlsx", ".xls"];
-const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB default, mirrors backend MAX_UPLOAD_MB
 
 interface DropzoneProps {
   onFileSelected: (file: File) => void;
+  maxUploadMb: number;
   disabled?: boolean;
 }
 
-export function Dropzone({ onFileSelected, disabled }: DropzoneProps) {
+export function Dropzone({ onFileSelected, maxUploadMb, disabled }: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const maxSizeBytes = maxUploadMb * 1024 * 1024;
 
   const validateAndEmit = useCallback(
     (file: File) => {
@@ -22,14 +23,14 @@ export function Dropzone({ onFileSelected, disabled }: DropzoneProps) {
         setError(`Unsupported file type "${ext}". Upload a CSV or XLSX file.`);
         return;
       }
-      if (file.size > MAX_SIZE_BYTES) {
-        setError(`File is ${formatBytes(file.size)}, which exceeds the ${formatBytes(MAX_SIZE_BYTES)} limit.`);
+      if (file.size > maxSizeBytes) {
+        setError(`File is ${formatBytes(file.size)}, which exceeds the ${formatBytes(maxSizeBytes)} limit.`);
         return;
       }
       setError(null);
       onFileSelected(file);
     },
-    [onFileSelected]
+    [maxSizeBytes, onFileSelected]
   );
 
   const handleDrop = (e: React.DragEvent) => {
@@ -69,7 +70,7 @@ export function Dropzone({ onFileSelected, disabled }: DropzoneProps) {
         <p className="text-sm font-medium">
           <span className="text-primary">Click to upload</span> or drag and drop
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">CSV or XLSX, up to {formatBytes(MAX_SIZE_BYTES)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">CSV or XLSX, up to {formatBytes(maxSizeBytes)}</p>
         <input
           ref={inputRef}
           type="file"

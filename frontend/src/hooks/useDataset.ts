@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getDatasetCharts, getDatasetInsights, getDatasetSummary, uploadDataset } from "@/services/api";
+import { getDatasetCharts, getDatasetInsights, getDatasetSummary, getUploadConfig, uploadDataset } from "@/services/api";
 import type { DatasetSummaryParams, InsightsRequest } from "@/types/api";
 import { useState } from "react";
 
@@ -25,6 +25,14 @@ export function useDatasetCharts(id: string | undefined) {
 export function useDatasetInsights(id: string | undefined) {
   return useMutation({
     mutationFn: (body: InsightsRequest = {}) => getDatasetInsights(id as string, body),
+  });
+}
+
+export function useUploadConfig() {
+  return useQuery({
+    queryKey: ["upload-config"],
+    queryFn: getUploadConfig,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

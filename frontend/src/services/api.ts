@@ -11,6 +11,7 @@ import type {
   ChartType,
   InsightsRequest,
   InsightsResponse,
+  UploadConfig,
   UploadResponse,
 } from "@/types/api";
 
@@ -47,6 +48,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+/** GET /api/upload/config — Effective server-side upload limit. */
+export function getUploadConfig(): Promise<UploadConfig> {
+  return request<UploadConfig>("/api/upload/config");
 }
 
 /** POST /api/upload — Upload a CSV or XLSX file. */

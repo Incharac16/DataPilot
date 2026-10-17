@@ -87,7 +87,7 @@ The app also serves `/` and `/docs`. `CORS_ORIGINS` configures browser origins. 
 ## Reliability, security, and known constraints
 
 - No authentication, authorization, user isolation, or rate limiting is implemented. The service is not safe to expose as a public multi-tenant API.
-- Upload content is currently read into memory before it is written. The configured default limit is 50 MB, but many concurrent uploads multiply memory pressure.
+- Upload content is currently read into memory before it is written. The configured default limit is 100 MB, but many concurrent uploads multiply memory pressure.
 - CSV/Excel parsing and Pandas analytics run within the API process. Large or adversarial workbooks can consume significant CPU and memory.
 - SQLite is local metadata storage with a single-instance operating assumption. Multiple API instances do not share a consistent local filesystem/database unless an external shared volume is configured; SQLite is not the intended multi-writer deployment database.
 - `UPLOAD_DIR` and `DATA_DIR` are local paths. There is no automatic retention, backup, or orphan cleanup policy.

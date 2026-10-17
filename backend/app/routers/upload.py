@@ -15,6 +15,11 @@ import pandas as pd
 router = APIRouter()
 
 
+@router.get("/api/upload/config")
+async def get_upload_config():
+    return {"max_upload_mb": settings.max_upload_mb}
+
+
 @router.get("/api/datasets", response_model=list[DatasetRecord])
 async def list_datasets():
     return [

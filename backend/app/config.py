@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     upload_dir: str = "uploads"
     data_dir: str = "data"
-    max_upload_mb: int = 50
+    max_upload_mb: int = 100
 
     cors_origins: str = (
         "http://localhost:5173,"
