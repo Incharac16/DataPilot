@@ -13,4 +13,6 @@ def validate_extension(filename: str) -> str:
 def validate_file_size(size_bytes: int, max_mb: int) -> None:
     max_bytes = max_mb * 1024 * 1024
     if size_bytes > max_bytes:
-        raise ValueError(f"File exceeds maximum size of {max_mb} MB")
+        raise ValueError(
+            f"File exceeds maximum size of {max_mb} MiB ({max_bytes} bytes)"
+        )

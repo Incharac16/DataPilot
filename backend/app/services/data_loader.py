@@ -5,7 +5,7 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 
 import pandas as pd
 from openpyxl import load_workbook
@@ -16,6 +16,7 @@ from app.services.data_types import (
     named_identifier_category,
     normalize_dataframe_types,
 )
+from app.utils.file_validator import validate_file_size
 
 
 def _clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
@@ -262,7 +263,7 @@ class DatasetStore:
             connection.execute("DELETE FROM datasets WHERE id = ?", (dataset_id,))
 
 
-def save_upload(file_content: bytes, filename: str):
+def save_upload(file_content: BinaryIO, filename: str, max_upload_mb: int):
     upload_dir = Path(settings.upload_dir)
     upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -270,7 +271,23 @@ def save_upload(file_content: bytes, filename: str):
     ext = Path(filename).suffix.lower()
     file_path = upload_dir / f"{dataset_id}{ext}"
 
-    file_path.write_bytes(file_content)
+    total_size = 0
+    file_created = False
+    upload_complete = False
+    try:
+        with file_path.open("xb") as destination:
+            file_created = True
+            while chunk := file_content.read(1024 * 1024):
+                total_size += len(chunk)
+                validate_file_size(total_size, max_upload_mb)
+                destination.write(chunk)
+
+        if total_size == 0:
+            raise ValueError("The uploaded file is empty.")
+        upload_complete = True
+    finally:
+        if file_created and not upload_complete:
+            file_path.unlink(missing_ok=True)
 
     return dataset_id, file_path
 
