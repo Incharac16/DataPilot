@@ -8,7 +8,7 @@ from fastapi import APIRouter, File, HTTPException, Response, UploadFile
 from app.config import settings
 from app.models.schemas import DatasetRecord
 from app.services.data_loader import DatasetStore, load_dataframe_from_path, save_upload
-from app.utils.file_validator import validate_extension, validate_file_size
+from app.utils.file_validator import validate_extension
 from openpyxl.utils.exceptions import InvalidFileException
 import pandas as pd
 
@@ -58,16 +58,14 @@ async def upload(file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
-    contents = await file.read()
-    if not contents:
-        raise HTTPException(status_code=400, detail="The uploaded file is empty.")
-
     try:
-        validate_file_size(len(contents), settings.max_upload_mb)
+        dataset_id, file_path = save_upload(
+            file.file,
+            file.filename,
+            settings.max_upload_mb,
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-
-    dataset_id, file_path = save_upload(contents, file.filename)
 
     try:
         df = load_dataframe_from_path(file_path)
