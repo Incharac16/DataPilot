@@ -1,137 +1,219 @@
-# DataPilot
+# DataPilot — Data Analytics and AI-Generated Insights
 
-DataPilot is a local web application for uploading CSV/XLSX datasets, browsing and searching their rows, reviewing deterministic analytics and data-quality checks, viewing automatically generated Plotly charts, asking Groq for a grounded explanation, and exporting a PDF report.
+DataPilot is a web-based data analytics application that helps users explore datasets through data processing, statistical analysis, data quality checks, and interactive visualizations. It integrates the Groq API to generate natural-language insights from relevant dataset information and analytical findings prepared by the backend.
 
-## Stack
+**DataPilot combines conventional data analytics with AI-generated insights.** Data processing and analytical calculations are handled by Python and Pandas, while AI is used specifically to interpret the provided context and generate insights.
 
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router, Plotly
-- **Backend:** FastAPI, Pandas, SQLite (standard library), Plotly, ReportLab
-- **AI:** Groq through the existing provider interface (`GROQ_MODEL` defaults to `openai/gpt-oss-20b`)
+## Features
 
-## Repository layout
+- **Dataset Upload:** Upload supported CSV and Excel files for analysis.
+- **Data Processing:** Process uploaded datasets using Python and Pandas.
+- **Data Quality Checks:** Identify missing values and duplicate records using application logic.
+- **Statistical Analysis:** Calculate statistics and summarize relevant dataset characteristics.
+- **Interactive Visualizations:** Present analytical results through Plotly charts.
+- **AI-Generated Insights:** Generate natural-language explanations using the Groq API and relevant information prepared by the backend.
+- **REST API Backend:** Handle frontend requests and backend processing through FastAPI.
+- **Configurable Upload Limit:** Configure the maximum permitted file size through backend settings.
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Frontend | React, TypeScript |
+| Backend | Python, FastAPI |
+| Data Processing | Pandas |
+| Data Visualization | Plotly |
+| AI Integration | Groq API |
+| Communication | REST APIs, JSON |
+
+## How It Works
+
+1. **Upload:** The user selects and uploads a supported dataset through the frontend.
+2. **Validate:** The backend validates the uploaded file according to the application's supported formats and size limits.
+3. **Process:** Python and Pandas load and process the dataset.
+4. **Analyze:** The application performs data quality checks and statistical calculations.
+5. **Visualize:** Plotly presents relevant analytical results as interactive charts.
+6. **Generate Insights:** The backend prepares relevant dataset information and analytical findings and sends the context to the Groq API.
+7. **Display:** The frontend presents the available analysis, visualizations, and AI-generated insights.
+
+## How AI Is Used
+
+AI is used specifically for generating natural-language insights. It does not perform every operation in DataPilot.
+
+| Task | How it is handled |
+|---|---|
+| File validation | Backend application logic |
+| Missing-value detection | Python and Pandas |
+| Duplicate detection | Python and Pandas |
+| Statistical calculations | Python and Pandas |
+| Chart generation | Plotly |
+| Natural-language insights | Groq API |
+
+The backend prepares relevant information from the dataset and analytical results before sending it to the language model. The model uses this context to produce readable explanations and insights.
+
+This separation keeps analytical calculations within the application's data-processing logic while using AI to help users interpret the results.
+
+## System Architecture
+
+```text
+                 User
+                  |
+                  v
+       React + TypeScript Frontend
+                  |
+             REST API
+                  |
+                  v
+           FastAPI Backend
+                  |
+                  v
+       Python + Pandas Processing
+                  |
+          +-------+-------+
+          |               |
+          v               v
+    Data Analytics   Dataset Context
+          |           Preparation
+          v               |
+     Plotly Charts         v
+                      Groq API
+                          |
+                          v
+                  AI-Generated Insights
+                          |
+          +---------------+
+          |
+          v
+      Frontend Results
+```
+
+The frontend handles user interaction and presentation. FastAPI coordinates backend operations, Pandas performs data processing and analytics, Plotly visualizes results, and Groq generates natural-language insights.
+
+## Getting Started
+
+Follow these instructions to run the project locally. The commands assume the repository has separate `backend` and `frontend` directories; adjust them if your current repository structure differs.
+
+### Prerequisites
+
+- Python
+- Node.js and npm
+- Git
+- A Groq API key for AI-generated insights
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Incharac16/DataPilot.git
+cd DataPilot
+```
+
+### 2. Set Up the Backend
+
+```bash
+cd backend
+python -m venv venv
+```
+
+Activate the virtual environment.
+
+**Windows PowerShell**
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+**macOS/Linux**
+
+```bash
+source venv/bin/activate
+```
+
+Install the dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Configure the Groq API key using the environment-variable name expected by the backend. Keep the key private and never commit it to GitHub.
+
+Start the backend:
+
+```bash
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+This command assumes the FastAPI application is available at `app.main:app`.
+
+### 3. Set Up the Frontend
+
+Open a second terminal from the project root:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the local URL displayed by the frontend development server. It is commonly `http://localhost:5173`.
+
+### 4. Use the Application
+
+1. Start the backend and frontend.
+2. Open the frontend in your browser.
+3. Upload a supported dataset.
+4. Explore the available analytics and visualizations.
+5. Review AI-generated insights when the Groq integration is configured and available.
+
+## Configuration
+
+The backend supports configuring the maximum upload size through the `MAX_UPLOAD_MB` setting.
+
+For example:
+
+```env
+MAX_UPLOAD_MB=100
+```
+
+This configures a maximum upload size of 100 MiB, subject to the application's validation and any additional infrastructure limits.
+
+Configure environment variables according to the backend's settings. Do not commit `.env` files, API keys, or other secrets to version control.
+
+## Project Structure
+
+The repository separates the frontend and backend to organize the user interface, API handling, and data-processing logic.
 
 ```text
 DataPilot/
 ├── backend/
 │   ├── app/
-│   │   ├── routers/       # Upload/history, analytics/charts/PDF, AI insights
-│   │   ├── services/      # Loading, profiling, charting, facts, reports, AI
-│   │   ├── models/        # Pydantic API contracts
-│   │   └── utils/
-│   ├── tests/             # unittest + FastAPI TestClient tests
 │   ├── requirements.txt
-│   └── .env.example
+│   └── ...
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── routes/
-│   │   └── services/api.ts
-│   └── package.json
-├── docs/SYSTEM_DESIGN.md
-└── sample_data/sales_sample.csv
+│   ├── package.json
+│   └── ...
+└── README.md
 ```
 
-## Run locally
+This is a simplified illustration; refer to the repository for the actual file structure.
 
-Run the backend from its directory because its `.env` file and default `uploads/` and `data/` paths are relative to the process working directory.
+## Design Principles
 
-### Backend (PowerShell)
+- **Separation of responsibilities:** Data processing, visualization, AI integration, and frontend presentation have distinct roles.
+- **Conventional analytics:** Data quality checks and statistical calculations are handled by application logic.
+- **Context-based AI:** The language model receives relevant information prepared by the backend rather than automatically accessing the uploaded file.
+- **Modular architecture:** Separate frontend and backend components support maintainability and future improvements.
 
-```powershell
-Set-Location backend
-py -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-# Edit .env and set GROQ_API_KEY to enable AI insights and AI-written reports.
-uvicorn app.main:app --reload
-```
+## Future Improvements
 
-The API is at `http://localhost:8000`; `http://localhost:8000/health` works without an AI key. Interactive API documentation is at `http://localhost:8000/docs`.
+Potential areas for future development include expanding analytical capabilities, improving insight evaluation, strengthening automated testing, and optimizing performance for larger datasets.
 
-### Frontend (in a second terminal)
+## Author
 
-```powershell
-Set-Location frontend
-npm install
-Copy-Item .env.example .env
-npm run dev
-```
+**Inchara C**
 
-Open `http://localhost:5173`. In development, Vite proxies `/api` to `http://localhost:8000`. Set `VITE_BACKEND_URL` in `frontend/.env` when the backend runs at a different address.
+GitHub: [@Incharac16](https://github.com/Incharac16)
 
-## Typical workflow
+---
 
-1. Open **Upload Dataset** and upload a CSV or Excel workbook (`.xlsx`/`.xls`).
-2. The upload response opens the dataset preview. The Analytics view has a server-searched and server-paginated preview, profiling, deterministic quality checks, and up to six suitable visualizations.
-3. Open **History** to retrieve backend-stored datasets after a page reload or server restart. Selecting a record opens its analytics; deleting it removes both its metadata and its stored upload.
-4. **Export PDF Report** on Analytics downloads a data-derived report with dataset overview, per-column statistics, quality findings, and selected vector charts.
-5. AI Chat and the AI-written report use the configured Groq model. AI requests include bounded, Pandas-computed facts; the API returns those facts separately from the model narrative.
-
-## HTTP API
-
-All application routes are prefixed with `/api` except `/` and `/health`.
-
-| Method | Route | Purpose |
-|---|---|---|
-| `POST` | `/api/upload` | Validate and parse a CSV/XLSX upload, then persist the file and metadata |
-| `GET` | `/api/datasets` | List persisted dataset metadata and indicate missing stored files |
-| `DELETE` | `/api/datasets/{id}` | Delete a dataset's stored upload and SQLite metadata |
-| `GET` | `/api/datasets/{id}/summary` | Return full-dataset analytics and one page of preview rows |
-| `GET` | `/api/datasets/{id}/charts` | Return generated Plotly charts, detected columns, and suitability diagnostics |
-| `POST` | `/api/datasets/{id}/insights` | Generate a Groq narrative and return separate verified Pandas facts |
-| `GET` | `/api/datasets/{id}/report.pdf` | Download a generated PDF report |
-| `GET` | `/health` | Basic backend health response |
-
-The summary endpoint accepts `page` (1-based), `page_size` (1–100), `search`, `sort_by`, and `sort_desc`. Search is case-insensitive across all columns and is applied to the full DataFrame before sorting and pagination. The response includes total rows, matching rows, effective page, and page size.
-
-Chart generation detects usable numeric, categorical, and date/time columns, avoids inferred identifiers as measurements, and skips unsuitable chart types with reasons. Automatic output is capped at six charts; high-volume chart data is sampled or bounded to keep responses and rendering manageable. Plotly figures support hover/zoom and PNG export when the browser's Plotly environment supports it.
-
-## Configuration
-
-Copy `backend/.env.example` to `backend/.env`. Do not commit `.env` or put real credentials in source control.
-
-| Variable | Default | Description |
-|---|---|---|
-| `AI_PROVIDER` | `groq` | AI provider registry key; Groq is the implemented provider |
-| `GROQ_API_KEY` | unset | Required only for AI insights and AI-written reports |
-| `GROQ_MODEL` | `openai/gpt-oss-20b` | Groq model name; this project default is retained |
-| `UPLOAD_DIR` | `uploads` | Directory for UUID-named uploaded source files |
-| `DATA_DIR` | `data` | Directory containing `datasets.sqlite3` |
-| `MAX_UPLOAD_MB` | `100` | Maximum accepted upload size; lower configured values are enforced |
-| `CORS_ORIGINS` | localhost Vite origins | Comma-separated allowed browser origins |
-| `VITE_BACKEND_URL` | empty | Optional frontend API base URL; Vite's development proxy defaults to port 8000 |
-
-SQLite stores **metadata only** (dataset ID, original filename, upload timestamp, format, row/column counts, size, absolute storage path, and status). Uploaded file bytes remain in `UPLOAD_DIR`. Keep both the SQLite database and upload directory on persistent storage to retain datasets across restarts. Back them up together. This is a single-instance local setup, not a distributed storage service.
-
-The Dashboard's recent-upload widget remains browser-local and is limited by its local-storage implementation. The History page is the backend-persisted list.
-
-## Tests and checks
-
-Backend tests use the virtual environment created above:
-
-```powershell
-Set-Location backend
-.\venv\Scripts\python.exe -m unittest discover -s tests -v
-```
-
-Frontend production build (includes the TypeScript project checks):
-
-```powershell
-Set-Location frontend
-npm run build
-```
-
-ESLint is available with `npm run lint`.
-
-## Known limitations
-
-- No authentication, authorization, per-user ownership, upload rate limiting, or multi-tenant isolation is implemented. Do not expose this development service to untrusted networks.
-- SQLite and local upload files are intended for a single application instance. Multiple instances need shared durable object storage and a coordinated database.
-- AI narratives depend on Groq credentials, network availability, and model output. Use the separately returned verified facts as the exact calculated values.
-- The current history records remain until explicitly deleted; no automatic retention or orphan-file cleanup policy is implemented.
-- `/health` is a basic liveness response; it does not test SQLite, file storage, or Groq availability.
-
-For the request/data flows, persistence boundary, error handling, and a clearly separated future scale-out design, see [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md).
+*DataPilot — Explore your data, understand the results, and gain insights with AI.*
